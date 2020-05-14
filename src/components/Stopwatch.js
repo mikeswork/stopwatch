@@ -12,6 +12,7 @@ class Stopwatch extends PureComponent {
 
 		// How often, in milliseconds, timer gets updated.
 		this.tickFrequency = props.frequency || 10;
+		this.msSoFar = 0;
 	}
 
 	nextId() {
@@ -23,11 +24,12 @@ class Stopwatch extends PureComponent {
 		if (this.state.interval) {
 			clearInterval(this.state.interval);
 			this.setState({ interval: null });
+			this.msSoFar = this.state.currentMs;
 		} else {
-			this.startTime = this.startTime || Date.now();
+			this.startTime = Date.now();
 
 			var newInterval = setInterval(() => {
-				this.setState({ currentMs: Date.now() - this.startTime });
+				this.setState({ currentMs: this.msSoFar + Date.now() - this.startTime });
 			}, this.tickFrequency);
 
 			this.setState({ interval: newInterval });
@@ -55,14 +57,18 @@ class Stopwatch extends PureComponent {
 		});
 	}
 
-	// Convert timer milliseconds to display time, formatted MM:SS:HH (H = Hundredth of a second).
+	msToSeconds(ms) {
+		return Math.floor((ms % 60000) / 1000);
+	}
+
+	// Convert timer milliseconds to display time, formatted MM:SS:T (T = Tenth of a second).
 	msToDisplayTime(ms) {
 		// console.log("[msToDisplayTime], current ms:", ms);
 
 		var minutes = Math.floor(ms / 60000);
 		var seconds = Math.floor((ms % 60000) / 1000);
 
-		// i.e. the number of milliseconds transpired since the second currently displayed
+		// i.e. the number of milliseconds transpired after the current second
 		var msBetweenSecs = ms - seconds * 1000 - minutes * 60 * 1000;
 		var secTenth = Math.floor(msBetweenSecs / 100);
 
@@ -82,6 +88,8 @@ class Stopwatch extends PureComponent {
 
 	render() {
 		//console.log("[render]")
+		var clipPathY = 100 - ((this.msToSeconds(this.state.currentMs) / 60).toFixed(4) * 100);
+		// console.log("clipPathY:", clipPathY)
 
 		return (
 			<div className="stopwatch">
@@ -93,7 +101,11 @@ class Stopwatch extends PureComponent {
 				</div>
 
 				<div className="time-display">
-					{this.msToDisplayTime(this.state.currentMs)}
+					<div className="progress" style={{clipPath: `polygon(0 ${clipPathY}%, 100% ${clipPathY}%, 100% 100%, 0 100%)`}}></div>
+
+					<div className="time">
+						{this.msToDisplayTime(this.state.currentMs)}
+					</div>
 				</div>
 
 				<div className="lap-times">
