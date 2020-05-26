@@ -129,7 +129,7 @@
 	background: var(--whiteTrans);
 	border-radius: 30vmax;
 
-	transition: all 1s;
+	transition: all 0.25s;
 }
 
 .stopwatch button {
