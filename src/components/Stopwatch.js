@@ -1,27 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import TimeList from "./TimeList";
-
-var startTime;
 
 export default function Stopwatch(props) {
 	// console.log("[Stopwatch]");
 
 	const tickFrequency = props.frequency;
+	const startTime = useRef();
 
 	const [interval, intervalSet] = useState(null);
 	const [time, setTime] = useState({ msSoFar: 0, currentMs: 0 });
 	const [lapTimes, setLapTimes] = useState([]);
 
-	function startStop() {
+	const startStop = useCallback(() => {
 		// Start timer
 		if (!interval) {
-			startTime = Date.now();
+			startTime.current = Date.now();
 
 			// Increment timer every tickFrequency
 			var newInterval = setInterval(() => {
 				// console.log("msSoFar", msSoFar, "+ Date.now()", Date.now(), "- startTime", startTime )
-				setTime(Object.assign({}, time, { currentMs: time.msSoFar + Date.now() - startTime }));
+				setTime(Object.assign({}, time, { currentMs: time.msSoFar + Date.now() - startTime.current }));
 			}, tickFrequency);
 
 			intervalSet(newInterval);
@@ -33,13 +32,20 @@ export default function Stopwatch(props) {
 			// console.log("msSoFar", msSoFar, "= currentMs", currentMs);
 			setTime(Object.assign({}, time, { msSoFar: time.currentMs }));
 		}
-	}
+	}, [interval, time, tickFrequency])
 
-	// reset() {
+	const reset = useCallback(() => {
+		// Stop timer if running
+		if (interval)
+			startStop();
 
-	// }
+		// Reset all timer data
+		intervalSet(null);
+		setTime({ msSoFar: 0, currentMs: 0 });
+		setLapTimes([]);
+	}, [interval, startStop])
 
-	function grabLapTime() {
+	const grabLapTime = useCallback(() => {
 		var currLapTimes = [...lapTimes];
 
 		var newTime = msToDisplayTime(time.currentMs);
@@ -50,7 +56,7 @@ export default function Stopwatch(props) {
 		}
 
 		console.log("[grabLapTime], lap times:", currLapTimes);
-	}
+	}, [lapTimes, time])
 
 	function msToSeconds(ms) {
 		return Math.floor((ms % 60000) / 1000);
@@ -82,8 +88,9 @@ export default function Stopwatch(props) {
 	return (
 		<div className="stopwatch">
 			<div className="buttons">
-				<button onClick={startStop.bind(this)}>{interval ? "Stop" : "Start"}</button>
-				<button onClick={grabLapTime.bind(this)}>Lap</button>
+				<button onClick={startStop}>{interval ? "Stop" : "Start"}</button>
+				<button onClick={grabLapTime}>Lap</button>
+				<button onClick={reset}>Reset</button>
 			</div>
 
 			<div className="time-display">
