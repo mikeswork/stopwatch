@@ -1,18 +1,18 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import TimeList from "./TimeList";
 
 export default function Stopwatch(props) {
 	// console.log("[Stopwatch]");
 
-	const tickFrequency = props.frequency;
+	const { tickFrequency } = props;
 	const startTime = useRef();
 
 	const [interval, intervalSet] = useState(null);
 	const [time, setTime] = useState({ msSoFar: 0, currentMs: 0 });
 	const [lapTimes, setLapTimes] = useState([]);
 
-	const startStop = useCallback(() => {
+	const startStop = () => {
 		// Start timer
 		if (!interval) {
 			startTime.current = Date.now();
@@ -32,19 +32,19 @@ export default function Stopwatch(props) {
 			// console.log("msSoFar", msSoFar, "= currentMs", currentMs);
 			setTime(Object.assign({}, time, { msSoFar: time.currentMs }));
 		}
-	}, [interval, time, tickFrequency])
+	};
 
-	const reset = useCallback(() => {
+	const reset = () => {
 		// Stop timer if running
-		if (interval)
-			startStop();
+		if (interval) startStop();
 
 		// Reset all timer data
 		intervalSet(null);
 		setTime({ msSoFar: 0, currentMs: 0 });
 		setLapTimes([]);
-	}, [interval, startStop])
+	};
 
+	// Not really necessary to memoize this function definition but good for demo purposes.
 	const grabLapTime = useCallback(() => {
 		var currLapTimes = [...lapTimes];
 
@@ -56,7 +56,7 @@ export default function Stopwatch(props) {
 		}
 
 		console.log("[grabLapTime], lap times:", currLapTimes);
-	}, [lapTimes, time])
+	}, [lapTimes, time]);
 
 	function msToSeconds(ms) {
 		return Math.floor((ms % 60000) / 1000);
@@ -102,16 +102,18 @@ export default function Stopwatch(props) {
 				<div className="time">{msToDisplayTime(time.currentMs)}</div>
 			</div>
 
-			<TimeList times={lapTimes} />
+			{useMemo(() => {
+				return <TimeList times={lapTimes} />;
+			}, [lapTimes])}
 		</div>
 	);
 }
 
 Stopwatch.propTypes = {
 	// Delay, in milliseconds, between each timer update.
-	frequency: PropTypes.number,
+	tickFrequency: PropTypes.number,
 };
 
 Stopwatch.defaultProps = {
-	frequency: 10,
+	tickFrequency: 10,
 };

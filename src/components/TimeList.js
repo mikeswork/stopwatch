@@ -2,6 +2,7 @@ import React from "react";
 
 export default function TimeList(props) {
 	var uniqueId = 0;
+	// console.log("[TimeList]")
 
 	return (
 		<div className="lap-times">
