@@ -48,7 +48,7 @@ export default function Stopwatch(props) {
 	const grabLapTime = useCallback(() => {
 		var currLapTimes = [...lapTimes];
 
-		var newTime = msToDisplayTime(time.currentMs);
+		var newTime = getDisplayTime();
 		// Only capture lap time if it's not 0 and hasn't already been captured
 		if (currLapTimes[currLapTimes.length - 1] !== newTime && time.currentMs !== 0) {
 			currLapTimes.push(newTime);
@@ -58,31 +58,31 @@ export default function Stopwatch(props) {
 		console.log("[grabLapTime], lap times:", currLapTimes);
 	}, [lapTimes, time]);
 
-	function msToSeconds(ms) {
-		return Math.floor((ms % 60000) / 1000);
+    function getSeconds() {
+		return Math.floor((time.currentMs % 60000) / 1000);
 	}
 
-	// Convert timer milliseconds to display time, formatted MM:SS:T (T = Tenth of a second).
-	function msToDisplayTime(ms) {
-		// console.log("[msToDisplayTime], current ms:", ms);
+    // Get time of timer formatted MM:SS.T (T = Tenth of a second).
+    function getDisplayTime() {
+		// console.log("[getDisplayTime], current ms:", ms);
 
-		var minutes = Math.floor(ms / 60000);
-		var seconds = Math.floor((ms % 60000) / 1000);
+		var minutes = Math.floor(time.currentMs / 60000);
+		var seconds = Math.floor((time.currentMs % 60000) / 1000);
 
 		// i.e. the number of milliseconds transpired after the current second
-		var msBetweenSecs = ms - seconds * 1000 - minutes * 60 * 1000;
+		var msBetweenSecs = time.currentMs - seconds * 1000 - minutes * 60 * 1000;
 		var secTenth = Math.floor(msBetweenSecs / 100);
 
 		var displayTime =
-			(minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + ":" + secTenth;
+			(minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + secTenth;
 
-		// console.log("[msToDisplayTime], displayTime:", displayTime)
+		// console.log("[getDisplayTime], displayTime:", displayTime)
 
 		return displayTime;
 	}
 
 	//console.log("[render]")
-	var clipPathY = 100 - (msToSeconds(time.currentMs) / 60).toFixed(4) * 100;
+	var clipPathY = 100 - (getSeconds() / 60).toFixed(4) * 100;
 	// console.log("clipPathY:", clipPathY)
 
 	return (
@@ -99,7 +99,7 @@ export default function Stopwatch(props) {
 					style={{ clipPath: `polygon(0 ${clipPathY}%, 100% ${clipPathY}%, 100% 100%, 0 100%)` }}
 				></div>
 
-				<div className="time">{msToDisplayTime(time.currentMs)}</div>
+				<div className="time">{getDisplayTime()}</div>
 			</div>
 
 			{useMemo(() => {
