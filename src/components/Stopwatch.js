@@ -18,14 +18,14 @@ export default function Stopwatch(props) {
 			startTime.current = Date.now();
 
 			// Increment timer every tickFrequency
-			var newInterval = setInterval(() => {
+			const newInterval = setInterval(() => {
 				// console.log("msSoFar", msSoFar, "+ Date.now()", Date.now(), "- startTime", startTime )
 				setTime(Object.assign({}, time, { currentMs: time.msSoFar + Date.now() - startTime.current }));
 			}, tickFrequency);
 
 			intervalSet(newInterval);
 
-			// Stop timer
+        // Stop timer
 		} else {
 			clearInterval(interval);
 			intervalSet(null);
@@ -45,7 +45,7 @@ export default function Stopwatch(props) {
 	};
 
 	// Not really necessary to memoize this function definition but good for demo purposes.
-	const grabLapTime = useCallback(() => {
+	const grabCurrentTime = useCallback(() => {
 		var currLapTimes = [...lapTimes];
 
 		var newTime = getDisplayTime();
@@ -55,7 +55,7 @@ export default function Stopwatch(props) {
 			setLapTimes(currLapTimes);
 		}
 
-		console.log("[grabLapTime], lap times:", currLapTimes);
+		console.log("[grabCurrentTime], lap times:", currLapTimes);
 	}, [lapTimes, time]);
 
     function getSeconds() {
@@ -89,7 +89,7 @@ export default function Stopwatch(props) {
 		<div className="stopwatch">
 			<div className="buttons">
 				<button onClick={startStop}>{interval ? "Stop" : "Start"}</button>
-				<button onClick={grabLapTime}>Lap</button>
+				<button onClick={grabCurrentTime}>Lap</button>
 				<button onClick={reset}>Reset</button>
 			</div>
 
