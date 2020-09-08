@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import TimeList from "./TimeList";
 
@@ -6,11 +6,13 @@ export default function Stopwatch(props) {
 	// console.log("[Stopwatch]");
 
 	const { tickFrequency } = props;
-	const startTime = useRef();
 
 	const [interval, intervalSet] = useState(null);
-	const [time, setTime] = useState({ msSoFar: 0, currentMs: 0 });
+	const [time, setTime] = useState(0);
 	const [lapTimes, setLapTimes] = useState([]);
+
+    const startTime = useRef();
+    const timeBeforeStart = useRef(0);
 
 	const startStop = () => {
 		// Start timer
@@ -19,8 +21,8 @@ export default function Stopwatch(props) {
 
 			// Increment timer every tickFrequency
 			const newInterval = setInterval(() => {
-				// console.log("msSoFar", msSoFar, "+ Date.now()", Date.now(), "- startTime", startTime )
-				setTime(Object.assign({}, time, { currentMs: time.msSoFar + Date.now() - startTime.current }));
+                const transpiredTime = Date.now() - startTime.current;
+                setTime(timeBeforeStart.current + transpiredTime);
 			}, tickFrequency);
 
 			intervalSet(newInterval);
@@ -28,9 +30,9 @@ export default function Stopwatch(props) {
         // Stop timer
 		} else {
 			clearInterval(interval);
-			intervalSet(null);
-			// console.log("msSoFar", msSoFar, "= currentMs", currentMs);
-			setTime(Object.assign({}, time, { msSoFar: time.currentMs }));
+            intervalSet(null);
+            
+            timeBeforeStart.current = time;
 		}
 	};
 
@@ -40,37 +42,37 @@ export default function Stopwatch(props) {
 
 		// Reset all timer data
 		intervalSet(null);
-		setTime({ msSoFar: 0, currentMs: 0 });
+        timeBeforeStart.current = 0;
+        setTime(0);
 		setLapTimes([]);
 	};
 
-	// Not really necessary to memoize this function definition but good for demo purposes.
-	const grabCurrentTime = useCallback(() => {
+	const grabCurrentTime = () => {
 		var currLapTimes = [...lapTimes];
 
 		var newTime = getDisplayTime();
 		// Only capture lap time if it's not 0 and hasn't already been captured
-		if (currLapTimes[currLapTimes.length - 1] !== newTime && time.currentMs !== 0) {
+		if (currLapTimes[currLapTimes.length - 1] !== newTime && time !== 0) {
 			currLapTimes.push(newTime);
 			setLapTimes(currLapTimes);
 		}
 
 		console.log("[grabCurrentTime], lap times:", currLapTimes);
-	}, [lapTimes, time]);
+	};
 
     function getSeconds() {
-		return Math.floor((time.currentMs % 60000) / 1000);
+		return Math.floor((time % 60000) / 1000);
 	}
 
     // Get time of timer formatted MM:SS.T (T = Tenth of a second).
     function getDisplayTime() {
 		// console.log("[getDisplayTime], current ms:", ms);
 
-		var minutes = Math.floor(time.currentMs / 60000);
-		var seconds = Math.floor((time.currentMs % 60000) / 1000);
+		var minutes = Math.floor(time / 60000);
+		var seconds = Math.floor((time % 60000) / 1000);
 
 		// i.e. the number of milliseconds transpired after the current second
-		var msBetweenSecs = time.currentMs - seconds * 1000 - minutes * 60 * 1000;
+		var msBetweenSecs = time - seconds * 1000 - minutes * 60 * 1000;
 		var secTenth = Math.floor(msBetweenSecs / 100);
 
 		var displayTime =
